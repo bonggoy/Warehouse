@@ -3,6 +3,7 @@ using Moq;
 using Ploeh.AutoFixture.Xunit2;
 using System.Collections.Generic;
 using System.Linq;
+using System.Web.Mvc;
 using Tests.Core;
 using Warehouse.Admin.Frontend.Controllers;
 using Warehouse.Data;
@@ -13,7 +14,7 @@ namespace Warehouse.Tests
 {
 	public class GeneralTests
 	{
-		[Theory, AutoMoqData]
+		[Theory, WarehouseAutoMoqData]
 		public void ListArticlesTest(
 			[Frozen] Mock<IRepository<Article>> repo,
 			[Frozen] Mock<IUnitOfWork> unitOfWork,
@@ -37,7 +38,7 @@ namespace Warehouse.Tests
 			Assert.Empty(result.ViewName);
 		}
 
-		[Theory, AutoMoqData]
+		[Theory, WarehouseAutoMoqData]
 		public void ListArticlesFilteredTest(
 			[Frozen] Mock<IRepository<Article>> repo,
 			[Frozen] Mock<IUnitOfWork> unitOfWork,
@@ -78,7 +79,7 @@ namespace Warehouse.Tests
 
 		}
 
-		[Theory, AutoMoqData]
+		[Theory, WarehouseAutoMoqData]
 		public void ListArticlesFilteredNoResultsTest(
 			[Frozen] Mock<IRepository<Article>> repo,
 			[Frozen] Mock<IUnitOfWork> unitOfWork,
@@ -124,7 +125,7 @@ namespace Warehouse.Tests
 			// assert:
 			unitOfWork.Verify(x => x.ArticlesRepository, Times.Once());
 			repo.Verify(x => x.Add(It.IsAny<Article>()), Times.Once());
-			unitOfWork.Verify(x => x.SaveChanges(), Times.Once());
+			unitOfWork.Verify(x => x.SaveChanges(), Times.Once(), "SaveChanges method not invoked.");
 
 			Assert.Equal("ArticleSaved", result.ViewName);
 		}
@@ -172,23 +173,91 @@ namespace Warehouse.Tests
 			// assert:
 			Assert.True(articlevm.Id > 0);
 			unitOfWork.Verify(x => x.ArticlesRepository, Times.Once());
-			repo.Verify(x => x.Attach(It.IsAny<Article>()), Times.Once());
-			repo.Verify(x => x.Update(It.IsAny<Article>()), Times.Once());
-			unitOfWork.Verify(x => x.SaveChanges(), Times.Once());
+			repo.Verify(x => x.Attach(It.IsAny<Article>()), Times.Once(), "Attach method not invoked.");
+			repo.Verify(x => x.Update(It.IsAny<Article>()), Times.Once(), "Update method not invoked.");
+			unitOfWork.Verify(x => x.SaveChanges(), Times.Once(), "SaveChanges method not invoked.");
 
 			Assert.Equal("ArticleSaved", result.ViewName);
 		}
 
-		public void RemoveArticleById()
+		[Theory, WarehouseAutoMoqData]
+		public void DeleteArticle(
+			[Frozen] Mock<IUnitOfWork> unitOfWork,
+			[Frozen] Mock<IRepository<Article>> repo,
+			int articleId,
+			HomeController sut)
 		{
 			// nie można usunąć jeśli jest w zamówieniach
 			// w historii zamówień
 			// lub na magazynie
+
+			// arrange:
+			unitOfWork.Setup(x => x.ArticlesRepository).Returns(repo.Object);
+			//repo.Setup(x => x.FindById(It.IsAny<int>())).Returns(article);
+
+			// act:
+			var result = sut.DeleteArticle(articleId, null) as RedirectToRouteResult;
+
+			// assert:
+			Assert.NotNull(result);
+			repo.Verify(x => x.Delete(It.IsAny<int>()), Times.Once(), "Delete method not invoked.");
+			unitOfWork.Verify(x => x.SaveChanges(), Times.Once(), "SaveChanges method not invoked.");
 		}
 
-		public void SetArticlePrice()
+		[Theory, WarehouseAutoMoqData]
+		public void DeleteArticleCantBecauseDevices(
+			[Frozen] Mock<IUnitOfWork> unitOfWork,
+			[Frozen] Mock<IRepository<Article>> repo,
+			[Frozen] Mock<IRepository<Device>> repoDevices,
+			List<Device> devices,
+			int articleId,
+			HomeController sut)
 		{
+			// arrange:
+			devices.ForEach(x => x.ArticleId = articleId);
+			repoDevices.Setup(x => x.All()).Returns(devices.AsQueryable());
+			unitOfWork.Setup(x => x.ArticlesRepository).Returns(repo.Object);
+			unitOfWork.Setup(x => x.DevicesRepository).Returns(repoDevices.Object);
 
+			// act:
+			var result = sut.DeleteArticle(articleId, null) as ViewResult;
+
+			// assert:
+			Assert.NotNull(result);
+			Assert.NotEmpty(result.ViewName);
+			Assert.NotNull(result.Model);
+			Assert.Equal("CantDeleteArticle", result.ViewName);
+
+			repo.Verify(x => x.Delete(It.IsAny<int>()), Times.Never(), "Delete method invoked.");
+			unitOfWork.Verify(x => x.SaveChanges(), Times.Never(), "SaveChanges method invoked.");
+		}
+
+		[Theory, WarehouseAutoMoqData]
+		public void DeleteArticleCantBecauseOrders(
+			[Frozen] Mock<IUnitOfWork> unitOfWork,
+			[Frozen] Mock<IRepository<Article>> repo,
+			[Frozen] Mock<IRepository<Order>> repoOrders,
+			List<Order> orders,
+			int articleId,
+			HomeController sut)
+		{
+			// arrange:
+			orders.SelectMany(o => o.Articles).ToList().ForEach(x => x.Id = articleId);
+			repoOrders.Setup(x => x.All()).Returns(orders.AsQueryable());
+			unitOfWork.Setup(x => x.ArticlesRepository).Returns(repo.Object);
+			unitOfWork.Setup(x => x.OrdersRepository).Returns(repoOrders.Object);
+
+			// act:
+			var result = sut.DeleteArticle(articleId, null) as ViewResult;
+
+			// assert:
+			Assert.NotNull(result);
+			Assert.NotEmpty(result.ViewName);
+			Assert.NotNull(result.Model);
+			Assert.Equal("CantDeleteArticle", result.ViewName);
+
+			repo.Verify(x => x.Delete(It.IsAny<int>()), Times.Never(), "Delete method invoked.");
+			unitOfWork.Verify(x => x.SaveChanges(), Times.Never(), "SaveChanges method invoked.");
 		}
 
 		// uzupełnienie artykułów

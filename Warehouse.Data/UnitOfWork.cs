@@ -81,6 +81,22 @@ namespace Warehouse.Data
 			}
 		}
 
+		public IRepository<Order> OrdersRepository
+		{
+			get
+			{
+				return GetRepository<Order>();
+			}
+		}
+
+		public IRepository<Device> DevicesRepository
+		{
+			get
+			{
+				return GetRepository<Device>();
+			}
+		}
+
 		public void SaveChanges()
 		{
 			_context.SaveChanges();

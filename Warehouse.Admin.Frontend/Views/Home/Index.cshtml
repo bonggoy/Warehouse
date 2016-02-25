@@ -42,8 +42,8 @@
         <div class="col-md-3">@item.Price</div>
         <div class="col-md-1">@item.ExpiryDays</div>
         <div class="col-md-2">@Html.ActionLink("Edit", "EditArticle", "Home", new { id=item.Id }, new { @class="btn" })
-                         @*<button class="btn">Edit</button><button class="btn">Remove</button>*@
-                </div>
+            @Html.ActionLink("Delete", "DeleteArticle", "Home", new { id = item.Id, filter = Model.Filter }, new { @class = "btn" })
+        </div>
     </div>
 }
 

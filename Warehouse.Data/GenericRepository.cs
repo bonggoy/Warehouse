@@ -45,8 +45,8 @@ namespace Warehouse.Data
 
 		public TEntity FindById(int id)
 		{
-			// return DbSet.Find(id);
-			return DbSet.FirstOrDefault(x => x.Id == id);
+			return DbSet.Find(id);
+			//return DbSet.FirstOrDefault(x => x.Id == id);
 		}
 
 		public IQueryable<TEntity> Where(Expression<Func<TEntity, bool>> expression)
@@ -54,20 +54,20 @@ namespace Warehouse.Data
 			return DbSet.Where(expression).AsQueryable();
 		}
 
-		public TEntity Remove(int id)
+		public TEntity Delete(int id)
 		{
 			var entity = new TEntity() { Id = id };
 			DbSet.Attach(entity);
-			return Remove(entity);
+			return Delete(entity);
 
 		}
 
-		public TEntity Remove(TEntity entity)
+		public TEntity Delete(TEntity entity)
 		{
 			return DbSet.Remove(entity);
 		}
 
-		public int Remove(Expression<Func<TEntity, bool>> expression)
+		public int Delete(Expression<Func<TEntity, bool>> expression)
 		{
 			return DbSet.Where(expression).Delete();
 		}
@@ -75,6 +75,11 @@ namespace Warehouse.Data
 		public void Update(TEntity entity)
 		{
 			_context.Entry<TEntity>(entity).State = EntityState.Modified;
+		}
+
+		public IQueryable<TEntity> Include<TProperty>(Expression<Func<TEntity, TProperty>> path)
+		{
+			return DbSet.Include(path);
 		}
 	}
 }

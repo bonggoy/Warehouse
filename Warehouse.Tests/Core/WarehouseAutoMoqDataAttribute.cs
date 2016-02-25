@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
+using Ploeh.AutoFixture;
 using Tests.Core;
-
 
 namespace Warehouse.Tests
 {
@@ -16,6 +16,9 @@ namespace Warehouse.Tests
 			//});
 
 			Fixture.Customize<IMapper>(x => x.FromFactory(() => config.CreateMapper()));
+
+			Fixture.Behaviors.Remove(new ThrowingRecursionBehavior()); // Where(x=>x.)
+			Fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 		}
 	}
 }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Warehouse.Data
@@ -10,9 +11,11 @@ namespace Warehouse.Data
 		public int Id { get; set; }
 
 		[Required]
+		[StringLength(250)]
 		public string Code { get; set; }
 
 		[Required]
+		[StringLength(250)]
 		public string Name { get; set; }
 
 		[Required]
@@ -20,5 +23,7 @@ namespace Warehouse.Data
 
 		[Required]
 		public int ExpiryDays { get; set; }
+
+		public virtual Collection<Device> Devices { get; set; }
 	}
 }

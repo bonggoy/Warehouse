@@ -21,4 +21,11 @@ namespace Warehouse.Admin.Frontend.Models
 		public List<Article> Items { get; set; }
 		public ArticleFilter Filter { get; set; }
 	}
+
+	public class Device
+	{
+		public int Id { get; set; }
+		public int ArticleId { get; set; }
+		public string Code { get; set; }
+	}
 }

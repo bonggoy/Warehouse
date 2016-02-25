@@ -106,5 +106,23 @@ namespace Warehouse.Admin.Frontend.Controllers
 			AddOrEditArticle(item);
 			return View("ArticleSaved", item);
 		}
+
+		// [HttpPost]
+		public ActionResult DeleteArticle(int id, ArticleFilter filter)
+		{
+			var repo = _unitOfWork.ArticlesRepository;
+
+			var hasDevices = _unitOfWork.DevicesRepository.All().Any(x => x.ArticleId == id);
+			var hasOrders = _unitOfWork.OrdersRepository.All().Any(x => x.Articles.Any(a => a.Id == id));
+
+			if (!hasDevices && !hasOrders)
+			{
+				repo.Delete(id);
+				_unitOfWork.SaveChanges();
+				return RedirectToAction("Index", new { filter });
+			}
+
+			return View("CantDeleteArticle");
+		}
 	}
 }

@@ -57,6 +57,7 @@
     <Compile Include="Attributes\SqlDefaultValueAttribute.cs" />
     <Compile Include="Customer.cs" />
     <Compile Include="Delivery.cs" />
+    <Compile Include="Device.cs" />
     <Compile Include="GenericRepository.cs" />
     <Compile Include="IEntity.cs" />
     <Compile Include="IRepository.cs" />

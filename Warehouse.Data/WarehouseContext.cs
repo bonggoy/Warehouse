@@ -8,6 +8,8 @@ namespace Warehouse.Data
 	public class WarehouseContext : DbContext
 	{
 		public DbSet<Article> Articles { get; set; }
+		public DbSet<Device> Devices { get; set; }
+		public DbSet<Order> Orders { get; set; }
 
 		protected override void OnModelCreating(DbModelBuilder modelBuilder)
 		{

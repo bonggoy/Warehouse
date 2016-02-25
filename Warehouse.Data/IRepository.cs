@@ -17,10 +17,11 @@ namespace Warehouse.Data
 		TEntity FindById(int id);
 		IQueryable<TEntity> Where(Expression<Func<TEntity, bool>> expression);
 		IQueryable<TEntity> All();
-		TEntity Remove(int id);
-		TEntity Remove(TEntity entity);
-		int Remove(Expression<Func<TEntity, bool>> expression);
+		TEntity Delete(int id);
+		TEntity Delete(TEntity entity);
+		int Delete(Expression<Func<TEntity, bool>> expression);
 		void Update(TEntity entity);
+		IQueryable<TEntity> Include<TProperty>(Expression<Func<TEntity, TProperty>> path);
 
 	}
 }
