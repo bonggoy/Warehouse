@@ -1,8 +1,5 @@
 ﻿using AutoMapper;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Web.Mvc;
 using Warehouse.Admin.Frontend.Models;
 
@@ -20,37 +17,6 @@ namespace Warehouse.Admin.Frontend.Controllers
 
 		}
 
-		// [OutputCache(VaryByParam = "filter")]
-		public ViewResult Index(ArticleFilter filter)
-		{
-			var repo = _unitOfWork.ArticlesRepository;
-			IQueryable<Data.Article> query = null;
-			if (filter != null)
-			{
-				Expression<Func<Data.Article, bool>> where = x => x.Code.StartsWith(filter.Code, StringComparison.InvariantCultureIgnoreCase);
-
-				if (!string.IsNullOrWhiteSpace(filter.Code))
-				{
-					query = repo.Where(x => x.Code.StartsWith(filter.Code, StringComparison.InvariantCultureIgnoreCase));
-				}
-
-				if (!string.IsNullOrWhiteSpace(filter.Name))
-				{
-					query = query == null
-						? repo.Where(x => string.Equals(filter.Name, x.Name, StringComparison.InvariantCultureIgnoreCase))
-						: query.Where(x => string.Equals(filter.Name, x.Name, StringComparison.InvariantCultureIgnoreCase));
-				}
-			}
-
-			var model = new ArticlesList
-			{
-				Items = _mapper.Map<List<Article>>(query.ToList()),
-				Filter = filter
-			};
-
-			return View(model);
-		}
-
 		public ActionResult About()
 		{
 			ViewBag.Message = "Your application description page.";
@@ -65,21 +31,64 @@ namespace Warehouse.Admin.Frontend.Controllers
 			return View();
 		}
 
-		public ViewResult CreateArticle()
-		{		
-			return View(new Article());
+		// [OutputCache(VaryByParam = "filter")]
+		public ViewResult Index(ArticleFilter filter)
+		{
+			var repo = _unitOfWork.ArticlesRepository;
+			IQueryable<Data.Article> query = _unitOfWork.ArticlesRepository.All();
+			if (filter != null)
+			{
+				if (!string.IsNullOrWhiteSpace(filter.Code))
+				{
+					var a = query.ToList();
+					query = query.Where(x => x.Code.StartsWith(filter.Code));
+				}
+
+				if (!string.IsNullOrWhiteSpace(filter.Name))
+				{
+					query = query.Where(x => x.Name.StartsWith(filter.Name));
+				}
+			}
+
+			var model = new ArticlesList
+			{
+				Items = query.ToList()
+					.Select(x => _mapper.Map<Article>(x))
+					.ToList(),
+				Filter = filter
+			};
+
+			return View(model);
 		}
 
-		[HttpPost]
-		public ViewResult CreateArticle(Article item)
+		private void AddOrEditArticle(Article item)
 		{
 			var article = _mapper.Map<Data.Article>(item);
 			var repo = _unitOfWork.ArticlesRepository;
-			repo.Add(article);
-			item.Id = article.Id;
-			_unitOfWork.SaveChanges();
+			if (item.Id == 0)
+			{
+				repo.Add(article);
+				item.Id = article.Id;
+			}
+			else
+			{
+				repo.Attach(article);
+				repo.Update(article);
+			}
 
-			return View("ArticleCreated", item);
+			_unitOfWork.SaveChanges();
+		}
+
+		public ViewResult AddArticle()
+		{
+			return View("EditArticle");
+		}
+
+		[HttpPost]
+		public ViewResult AddArticle(Article item)
+		{
+			AddOrEditArticle(item);
+			return View("ArticleSaved", item);
 		}
 
 		public ViewResult EditArticle(int id)
@@ -94,12 +103,8 @@ namespace Warehouse.Admin.Frontend.Controllers
 		[HttpPost]
 		public ViewResult EditArticle(Article item)
 		{
-			var repo = _unitOfWork.ArticlesRepository;
-			var db = _mapper.Map<Data.Article>(item);
-			repo.Attach(db);
-			_unitOfWork.SaveChanges();
-
-			return View(item);
+			AddOrEditArticle(item);
+			return View("ArticleSaved", item);
 		}
 	}
 }

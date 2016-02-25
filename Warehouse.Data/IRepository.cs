@@ -15,11 +15,12 @@ namespace Warehouse.Data
 		void Add(TEntity entity);
 		void AddRange(IEnumerable<TEntity> collection);
 		TEntity FindById(int id);
-		IQueryable<TEntity> Where(Func<TEntity, bool> expression);
+		IQueryable<TEntity> Where(Expression<Func<TEntity, bool>> expression);
 		IQueryable<TEntity> All();
 		TEntity Remove(int id);
 		TEntity Remove(TEntity entity);
 		int Remove(Expression<Func<TEntity, bool>> expression);
+		void Update(TEntity entity);
 
 	}
 }

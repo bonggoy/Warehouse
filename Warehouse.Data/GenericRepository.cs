@@ -40,7 +40,7 @@ namespace Warehouse.Data
 
 		public IQueryable<TEntity> All()
 		{
-			return DbSet.Select(x => x);
+			return DbSet.AsQueryable(); // Select(x => x);
 		}
 
 		public TEntity FindById(int id)
@@ -49,7 +49,7 @@ namespace Warehouse.Data
 			return DbSet.FirstOrDefault(x => x.Id == id);
 		}
 
-		public IQueryable<TEntity> Where(Func<TEntity, bool> expression)
+		public IQueryable<TEntity> Where(Expression<Func<TEntity, bool>> expression)
 		{
 			return DbSet.Where(expression).AsQueryable();
 		}
@@ -70,6 +70,11 @@ namespace Warehouse.Data
 		public int Remove(Expression<Func<TEntity, bool>> expression)
 		{
 			return DbSet.Where(expression).Delete();
+		}
+
+		public void Update(TEntity entity)
+		{
+			_context.Entry<TEntity>(entity).State = EntityState.Modified;
 		}
 	}
 }
