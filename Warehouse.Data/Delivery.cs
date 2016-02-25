@@ -1,0 +1,10 @@
+﻿namespace Warehouse.Data
+{
+	public class Delivery : IEntity
+	{
+		public int Id { get; set; }
+		public string Name { get; set; }
+
+		// delivery prices
+	}
+}
