@@ -1,0 +1,33 @@
+﻿@using Warehouse.Admin.Frontend.Models
+@model DevicesList
+
+@{
+    ViewBag.Title = "Devices list";
+}
+
+<h2>Devices list</h2>
+
+<p>
+    @Html.ActionLink("Add New", "AddDevices", new { articleId = Model.Article.Id })
+</p>
+
+<table class="table">
+    <tr>
+        <th>
+            Code
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model.Items) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.Code)
+        </td>
+        <td>
+            @Html.ActionLink("Delete", "DeleteDevice", "Home", new { id = item.Id }, new { @class = "btn", onclick = "return confirm('Are you sure you wish to delete this device?');" })
+        </td>
+    </tr>
+}
+
+</table>

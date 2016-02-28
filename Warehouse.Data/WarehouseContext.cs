@@ -10,6 +10,7 @@ namespace Warehouse.Data
 		public DbSet<Article> Articles { get; set; }
 		public DbSet<Device> Devices { get; set; }
 		public DbSet<Order> Orders { get; set; }
+		public DbSet<Customer> Customers { get; set; }
 
 		protected override void OnModelCreating(DbModelBuilder modelBuilder)
 		{

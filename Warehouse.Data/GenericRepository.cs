@@ -74,12 +74,22 @@ namespace Warehouse.Data
 
 		public void Update(TEntity entity)
 		{
-			_context.Entry<TEntity>(entity).State = EntityState.Modified;
+			_context.Entry(entity).State = EntityState.Modified;
 		}
 
 		public IQueryable<TEntity> Include<TProperty>(Expression<Func<TEntity, TProperty>> path)
 		{
 			return DbSet.Include(path);
+		}
+
+
+
+		public int Count<TElement>(TEntity entity, Expression<Func<TEntity, ICollection<TElement>>> navigationProperty) where TElement : class
+		{
+			return _context.Entry(entity)
+				.Collection(navigationProperty)
+				.Query()
+				.Count();
 		}
 	}
 }

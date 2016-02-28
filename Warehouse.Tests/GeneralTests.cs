@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using Moq;
 using Ploeh.AutoFixture.Xunit2;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Web.Mvc;
 using Tests.Core;
 using Warehouse.Admin.Frontend.Controllers;
@@ -123,11 +125,12 @@ namespace Warehouse.Tests
 			var result = sut.AddArticle(article);
 
 			// assert:
-			unitOfWork.Verify(x => x.ArticlesRepository, Times.Once());
-			repo.Verify(x => x.Add(It.IsAny<Article>()), Times.Once());
+			unitOfWork.Verify(x => x.ArticlesRepository, Times.Once(), "ArticlesRepository not invoked.");
+			repo.Verify(x => x.Add(It.IsAny<Article>()), Times.Once(), "Add method not invoked.");
 			unitOfWork.Verify(x => x.SaveChanges(), Times.Once(), "SaveChanges method not invoked.");
 
-			Assert.Equal("ArticleSaved", result.ViewName);
+			Assert.True(result.RouteValues.Count() > 0);
+			Assert.Equal("Index", result.RouteValues["action"]);
 		}
 
 		[Theory, WarehouseAutoMoqData]
@@ -177,7 +180,8 @@ namespace Warehouse.Tests
 			repo.Verify(x => x.Update(It.IsAny<Article>()), Times.Once(), "Update method not invoked.");
 			unitOfWork.Verify(x => x.SaveChanges(), Times.Once(), "SaveChanges method not invoked.");
 
-			Assert.Equal("ArticleSaved", result.ViewName);
+			Assert.True(result.RouteValues.Count() > 0);
+			Assert.Equal("Index", result.RouteValues["action"]);
 		}
 
 		[Theory, WarehouseAutoMoqData]
@@ -261,20 +265,32 @@ namespace Warehouse.Tests
 		}
 
 		// uzupełnienie artykułów
-		public void ReplenishArticles()
+		public void SaveAddDevices_ArticleExists_Test(
+			IMapper mapper,
+			[Frozen] Mock<IUnitOfWork> unitOfWork,
+			[Frozen] Mock<IRepository<Article>> repo,
+			[Frozen] Mock<IRepository<Device>> repoDevices,
+			FrontModel.Device device,
+			HomeController sut
+			)
 		{
 
+			// arrange:
+			var dbdevice = mapper.Map<Device>(device);
+			repo.Setup(x => x.All().Any(It.IsAny<Expression<Func<Article, bool>>>())).Returns(true);
+			unitOfWork.Setup(x => x.ArticlesRepository).Returns(repo.Object);
+			unitOfWork.Setup(x => x.DevicesRepository).Returns(repoDevices.Object);
+
+			// act:
+			var result = sut.AddDevices(device);
+
+			// assert:
+			repo.Verify(x => x.All().Any(d => d.Id == device.ArticleId), Times.Once(), "Any method not invoked.");
+			repoDevices.Verify(x => x.AddRange(new[] { dbdevice }), Times.Once(), "AddRange method not invoked.");
+			unitOfWork.Verify(x => x.SaveChanges(), Times.Never(), "SaveChanges method invoked.");
 		}
 
-		public void FilterArticlesByName()
-		{
 
-		}
-
-		public void FilterArticlesByCode()
-		{
-
-		}
 
 		public void OrderOneArticle()
 		{

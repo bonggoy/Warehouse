@@ -28,8 +28,9 @@
 <div class="row">
     <div class="col-md-3">Name</div>
     <div class="col-md-3">Code</div>
-    <div class="col-md-3">Price</div>
+    <div class="col-md-2">Price</div>
     <div class="col-md-1">Expiry days</div>
+    <div class="col-md-1">Devices count</div>
     <div class="col-md-2">Action</div>
 </div>
 
@@ -39,10 +40,13 @@
     <div class="row" item-id="@item.Id">
         <div class="col-md-3">@item.Name</div>
         <div class="col-md-3">@item.Code</div>
-        <div class="col-md-3">@item.Price</div>
+        <div class="col-md-2">@item.Price</div>
         <div class="col-md-1">@item.ExpiryDays</div>
-        <div class="col-md-2">@Html.ActionLink("Edit", "EditArticle", "Home", new { id=item.Id }, new { @class="btn" })
-            @Html.ActionLink("Delete", "DeleteArticle", "Home", new { id = item.Id, filter = Model.Filter }, new { @class = "btn" })
+        <div class="col-md-1">@item.DevicesCount</div>
+        <div class="col-md-2">
+            @Html.ActionLink("Edit", "EditArticle", "Home", new { id=item.Id }, new { @class="btn" })
+            @Html.ActionLink("Delete", "DeleteArticle", "Home", new { id = item.Id }, new { @class = "btn", onclick = "return confirm('Are you sure you wish to delete this article?');" })
+            @Html.ActionLink("Devices", "DevicesList")
         </div>
     </div>
 }

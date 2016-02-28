@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using System;
 using System.Linq;
 using System.Web.Mvc;
 using Warehouse.Admin.Frontend.Models;
@@ -35,25 +36,32 @@ namespace Warehouse.Admin.Frontend.Controllers
 		public ViewResult Index(ArticleFilter filter)
 		{
 			var repo = _unitOfWork.ArticlesRepository;
-			IQueryable<Data.Article> query = _unitOfWork.ArticlesRepository.All();
+			var query = _unitOfWork.ArticlesRepository
+				.All()
+				.Select(x => new { Article = x, DevicesCount = x.Devices.Count });
+
 			if (filter != null)
 			{
 				if (!string.IsNullOrWhiteSpace(filter.Code))
 				{
-					var a = query.ToList();
-					query = query.Where(x => x.Code.StartsWith(filter.Code));
+					query = query.Where(x => x.Article.Code.StartsWith(filter.Code));
 				}
 
 				if (!string.IsNullOrWhiteSpace(filter.Name))
 				{
-					query = query.Where(x => x.Name.StartsWith(filter.Name));
+					query = query.Where(x => x.Article.Name.StartsWith(filter.Name));
 				}
 			}
 
 			var model = new ArticlesList
 			{
 				Items = query.ToList()
-					.Select(x => _mapper.Map<Article>(x))
+					.Select(x =>
+					{
+						// set devices count to use in mapper
+						x.Article.DevicesCount = x.DevicesCount;
+						return _mapper.Map<Article>(x.Article);
+					})
 					.ToList(),
 				Filter = filter
 			};
@@ -85,10 +93,10 @@ namespace Warehouse.Admin.Frontend.Controllers
 		}
 
 		[HttpPost]
-		public ViewResult AddArticle(Article item)
+		public RedirectToRouteResult AddArticle(Article item)
 		{
 			AddOrEditArticle(item);
-			return View("ArticleSaved", item);
+			return RedirectToAction("Index");
 		}
 
 		public ViewResult EditArticle(int id)
@@ -101,10 +109,10 @@ namespace Warehouse.Admin.Frontend.Controllers
 		}
 
 		[HttpPost]
-		public ViewResult EditArticle(Article item)
+		public RedirectToRouteResult EditArticle(Article item)
 		{
 			AddOrEditArticle(item);
-			return View("ArticleSaved", item);
+			return RedirectToAction("Index");
 		}
 
 		// [HttpPost]
@@ -122,7 +130,55 @@ namespace Warehouse.Admin.Frontend.Controllers
 				return RedirectToAction("Index", new { filter });
 			}
 
+			ModelState.AddModelError("", "Can't delete article because it has devices or orders.");
 			return View("CantDeleteArticle");
+		}
+
+		public ViewResult DevicesList(int articleId)
+		{
+			var article = _unitOfWork.ArticlesRepository
+				.Include(x => x.Devices)
+				.FirstOrDefault(x => x.Id == articleId);
+
+			var model = _mapper.Map<Article>(article);
+			return View(model);
+
+		}
+
+		public ViewResult AddDevices(int articleId)
+		{
+			return View(new Device
+			{
+				ArticleId = articleId
+			});
+		}
+
+		[HttpPost]
+		public ActionResult AddDevices(int articleId, string devices)
+		{
+
+			if (_unitOfWork.ArticlesRepository.All().Any(x => x.Id == articleId))
+			{
+				var devicesToAdd = devices
+					.Split(new[] { ';', ',', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+					.Select(x => new Data.Device
+					{
+						ArticleId = articleId,
+						Code = x
+					});
+				_unitOfWork.DevicesRepository.AddRange(devicesToAdd);
+				_unitOfWork.SaveChanges();
+
+
+				return RedirectToAction("DevicesList", new { articleId });
+			}
+			else
+			{
+				ModelState.AddModelError("", "Article " + articleId + " does not exist.");
+				return View(articleId);
+			}
+
+
 		}
 	}
 }

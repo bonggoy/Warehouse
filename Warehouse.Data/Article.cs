@@ -25,5 +25,8 @@ namespace Warehouse.Data
 		public int ExpiryDays { get; set; }
 
 		public virtual Collection<Device> Devices { get; set; }
+
+		[NotMapped]
+		public int DevicesCount { get; set; }
 	}
 }

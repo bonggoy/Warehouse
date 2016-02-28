@@ -14,6 +14,8 @@ namespace Warehouse.Admin.Frontend.Models
 		public decimal Price { get; set; }
 		[Required]
 		public int ExpiryDays { get; set; }
+
+		public int DevicesCount { get; set; }
 	}
 
 	public class ArticlesList
@@ -27,5 +29,11 @@ namespace Warehouse.Admin.Frontend.Models
 		public int Id { get; set; }
 		public int ArticleId { get; set; }
 		public string Code { get; set; }
+	}
+
+	public class DevicesList
+	{
+		public List<Device> Items { get; set; }
+		public Article Article { get; set; }
 	}
 }
